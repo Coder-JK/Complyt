@@ -52,8 +52,20 @@ export async function runEvidencePipeline(
 
   try {
     const scanDir = targetDir || process.cwd();
+    const pkgJsonPath = path.join(scanDir, "package.json");
 
-    // Step 1: Generate SBOM
+    if (!fs.existsSync(scanDir)) {
+      throw new Error(
+        `Target directory does not exist: ${scanDir}\n\nGo to Settings and set a valid project directory for this workspace.`
+      );
+    }
+
+    if (!fs.existsSync(pkgJsonPath)) {
+      throw new Error(
+        `No package.json found at ${pkgJsonPath}\n\nComplyt needs a package.json to generate an SBOM. Make sure the workspace target directory points to your project root.`
+      );
+    }
+
     const sbom = await generateSbom(scanDir);
     artifactCount += await saveArtifact(
       db,

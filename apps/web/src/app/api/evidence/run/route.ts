@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await runEvidencePipeline(
-    workspace.id,
-    workspace.targetDir ?? undefined
-  );
+  const scanDir = workspace.targetDir ?? undefined;
 
-  return NextResponse.json(result, {
-    status: result.status === "completed" ? 200 : 500,
-  });
+  const result = await runEvidencePipeline(workspace.id, scanDir);
+
+  return NextResponse.json(
+    { ...result, scannedDirectory: scanDir || "(Complyt project itself)" },
+    { status: result.status === "completed" ? 200 : 500 }
+  );
 }

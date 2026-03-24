@@ -10,11 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Play, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Play, ChevronDown, ChevronUp, AlertTriangle, FolderOpen } from "lucide-react";
+import Link from "next/link";
 
 interface Workspace {
   id: string;
   name: string;
+  targetDir: string | null;
 }
 
 interface Artifact {
@@ -140,6 +142,31 @@ export default function EvidencePage() {
           </Button>
         </div>
       </div>
+
+      {selectedWs && (() => {
+        const activeWs = workspaces.find((w) => w.id === selectedWs);
+        const hasDir = activeWs?.targetDir && activeWs.targetDir.trim().length > 0;
+        return hasDir ? (
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm">
+            <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-muted-foreground">Scanning:</span>
+            <code className="rounded bg-background px-1.5 py-0.5 text-xs font-mono">
+              {activeWs.targetDir}
+            </code>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>
+              No project directory configured. Scans will target Complyt&apos;s
+              own dependencies.{" "}
+              <Link href="/settings" className="font-medium underline">
+                Set a directory in Settings
+              </Link>
+            </span>
+          </div>
+        );
+      })()}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
