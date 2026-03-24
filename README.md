@@ -70,6 +70,7 @@ All network calls are optional and resilient (timeouts, retries, caching, offlin
 
 See the [docs/](docs/) directory:
 
+- **[User Guide](docs/user-guide.md)** -- what Complyt does, who it's for, and a walkthrough with screenshots
 - [Getting Started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Security](docs/security.md)

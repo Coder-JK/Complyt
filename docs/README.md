@@ -6,6 +6,7 @@ This directory contains the full documentation for Complyt.
 
 | Document | Description |
 |---|---|
+| [User Guide](user-guide.md) | What Complyt does, who it's for, walkthrough with screenshots |
 | [Getting Started](getting-started.md) | Setup, commands, and troubleshooting |
 | [Architecture](architecture.md) | System design, data flows, and tech choices |
 | [Security](security.md) | Threat model, data handling, supply-chain hardening |
