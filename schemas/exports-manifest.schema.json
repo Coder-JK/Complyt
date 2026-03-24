@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://complyt.dev/schemas/exports-manifest.schema.json",
+  "title": "ExportsManifest",
+  "description": "Manifest describing the contents of an evidence pack export",
+  "type": "object",
+  "required": ["version", "generated_at", "workspace", "artifacts"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Schema version"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when this manifest was generated"
+    },
+    "generator": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "complyt"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["filename", "type", "hash", "collected_at"],
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Filename within the export archive"
+          },
+          "type": {
+            "type": "string",
+            "description": "Artifact type identifier"
+          },
+          "content_type": {
+            "type": "string",
+            "description": "MIME content type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hash": {
+            "type": "object",
+            "required": ["algo", "value"],
+            "properties": {
+              "algo": {
+                "type": "string",
+                "enum": ["sha256"]
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of this artifact"
+          }
+        }
+      }
+    }
+  }
+}

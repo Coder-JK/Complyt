@@ -1,0 +1,329 @@
+openapi: 3.1.0
+info:
+  title: Complyt API
+  description: Compliance automation toolkit API
+  version: 0.1.0
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /api/workspaces:
+    get:
+      summary: List workspaces
+      operationId: listWorkspaces
+      responses:
+        "200":
+          description: Array of workspaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workspace"
+    post:
+      summary: Create workspace
+      operationId: createWorkspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkspace"
+      responses:
+        "201":
+          description: Created workspace with seeded controls
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          description: Validation error
+
+  /api/workspaces/{id}:
+    get:
+      summary: Get workspace by ID
+      operationId: getWorkspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Workspace details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "404":
+          description: Not found
+    patch:
+      summary: Update workspace
+      operationId: updateWorkspace
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkspace"
+      responses:
+        "200":
+          description: Updated workspace
+
+  /api/controls:
+    get:
+      summary: List controls for workspace
+      operationId: listControls
+      parameters:
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Array of controls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Control"
+    patch:
+      summary: Update control status
+      operationId: updateControlStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, status]
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [not_started, in_progress, met, not_met]
+      responses:
+        "200":
+          description: Updated control
+
+  /api/evidence/run:
+    post:
+      summary: Start evidence pipeline run
+      operationId: startEvidenceRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId, type]
+              properties:
+                workspaceId:
+                  type: string
+                  format: uuid
+                type:
+                  type: string
+                  enum: [sbom, osv_scan, kev_enrichment, epss_enrichment, full_pack]
+      responses:
+        "200":
+          description: Pipeline result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineResult"
+
+  /api/evidence/runs:
+    get:
+      summary: List evidence runs
+      operationId: listEvidenceRuns
+      parameters:
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Array of evidence runs
+
+  /api/evidence/runs/{id}:
+    get:
+      summary: Get evidence run with artifacts
+      operationId: getEvidenceRun
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Run details with artifacts
+        "404":
+          description: Not found
+
+  /api/exports:
+    get:
+      summary: List exports
+      operationId: listExports
+      parameters:
+        - name: workspaceId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Array of exports
+    post:
+      summary: Generate audit pack ZIP
+      operationId: createExport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId]
+              properties:
+                workspaceId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Generated export metadata
+
+  /api/exports/{id}/download:
+    get:
+      summary: Download export ZIP
+      operationId: downloadExport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: ZIP file
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Not found
+
+components:
+  schemas:
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        targetDir:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateWorkspace:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+        targetDir:
+          type: string
+          maxLength: 500
+
+    UpdateWorkspace:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        targetDir:
+          type: string
+
+    Control:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        controlId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        frequency:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [not_started, in_progress, met, not_met]
+
+    PipelineResult:
+      type: object
+      properties:
+        runId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed, failed]
+        error:
+          type: string
+          nullable: true
+        artifactCount:
+          type: integer
+        offline:
+          type: boolean

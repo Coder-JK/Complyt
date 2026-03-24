@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://complyt.dev/schemas/evidence-run.schema.json",
+  "title": "EvidenceRun",
+  "description": "A record of an evidence collection run",
+  "type": "object",
+  "required": ["id", "workspace_id", "type", "status", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this run"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID of the workspace this run belongs to"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["sbom", "osv_scan", "kev_enrichment", "epss_enrichment", "full_pack"],
+      "description": "Type of evidence run"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "running", "completed", "failed"],
+      "description": "Current status of the run"
+    },
+    "started_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the run started"
+    },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the run completed"
+    },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Error message if the run failed"
+    },
+    "metadata": {
+      "type": ["object", "null"],
+      "description": "Additional metadata about the run (e.g., offline mode, artifact counts)"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "evidence-artifact.schema.json"
+      },
+      "description": "Artifacts produced by this run"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the record was created"
+    }
+  }
+}

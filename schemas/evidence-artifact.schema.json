@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://complyt.dev/schemas/evidence-artifact.schema.json",
+  "title": "EvidenceArtifact",
+  "description": "An evidence artifact produced by a compliance evidence run",
+  "type": "object",
+  "required": ["id", "run_id", "workspace_id", "type", "filename", "content_type", "storage_path", "collected_at", "hash"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this artifact"
+    },
+    "run_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID of the evidence run that produced this artifact"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID of the workspace this artifact belongs to"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["sbom", "osv_scan", "osv_enriched", "kev_data", "epss_data", "control_matrix", "evidence_manifest"],
+      "description": "Type of evidence artifact"
+    },
+    "filename": {
+      "type": "string",
+      "description": "Original filename of the artifact"
+    },
+    "content_type": {
+      "type": "string",
+      "description": "MIME content type",
+      "default": "application/json"
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Size of the artifact in bytes"
+    },
+    "hash": {
+      "type": "object",
+      "required": ["algo", "value"],
+      "properties": {
+        "algo": {
+          "type": "string",
+          "enum": ["sha256"],
+          "description": "Hash algorithm used"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hex-encoded hash value"
+        }
+      }
+    },
+    "storage_path": {
+      "type": "string",
+      "description": "Path to artifact file relative to data directory"
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the artifact was collected"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the record was created"
+    }
+  }
+}
