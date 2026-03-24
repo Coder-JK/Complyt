@@ -11,6 +11,8 @@ import { fetchEpssScores } from "./epss";
 import { enrichOsvResults } from "./enrich";
 import { OfflineError } from "./http";
 import { isOffline } from "./http";
+import { isSemgrepAvailable, runSemgrepScan } from "./sast";
+import { isGitleaksAvailable, runGitleaksScan } from "./secrets";
 
 interface PipelineResult {
   runId: string;
@@ -153,6 +155,44 @@ export async function runEvidencePipeline(
       artifactsDir
     );
 
+    // Step 4: SAST scan (if Semgrep is installed)
+    let sastSummary: Record<string, unknown> | null = null;
+    if (isSemgrepAvailable()) {
+      const sastResult = runSemgrepScan(scanDir);
+      artifactCount += await saveArtifact(
+        db,
+        runId,
+        workspaceId,
+        "sbom",
+        "sast.json",
+        sastResult,
+        artifactsDir
+      );
+      sastSummary = {
+        findings: sastResult.summary.total_findings,
+        by_severity: sastResult.summary.by_severity,
+      };
+    }
+
+    // Step 5: Secret scan (if Gitleaks is installed)
+    let secretsSummary: Record<string, unknown> | null = null;
+    if (isGitleaksAvailable()) {
+      const secretsResult = runGitleaksScan(scanDir);
+      artifactCount += await saveArtifact(
+        db,
+        runId,
+        workspaceId,
+        "sbom",
+        "secrets.json",
+        secretsResult,
+        artifactsDir
+      );
+      secretsSummary = {
+        findings: secretsResult.summary.total_findings,
+        by_rule: secretsResult.summary.by_rule,
+      };
+    }
+
     db.update(evidenceRuns)
       .set({
         status: "completed",
@@ -161,6 +201,8 @@ export async function runEvidencePipeline(
           offline,
           artifactCount,
           summary: enriched.summary,
+          sast: sastSummary,
+          secrets: secretsSummary,
         }),
       })
       .where(eq(evidenceRuns.id, runId))

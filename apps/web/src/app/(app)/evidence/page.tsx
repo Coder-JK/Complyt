@@ -47,6 +47,15 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   failed: "destructive",
 };
 
+interface ScannerCapability {
+  name: string;
+  description: string;
+  available: boolean;
+  builtin?: boolean;
+  tool?: string;
+  installUrl?: string;
+}
+
 export default function EvidencePage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWs, setSelectedWs] = useState("");
@@ -54,6 +63,17 @@ export default function EvidencePage() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
+  const [capabilities, setCapabilities] = useState<Record<string, ScannerCapability>>({});
+
+  const fetchCapabilities = useCallback(async () => {
+    try {
+      const res = await fetch("/api/evidence/capabilities");
+      const data = await res.json();
+      setCapabilities(data.scanners || {});
+    } catch {
+      // non-critical
+    }
+  }, []);
 
   const fetchWorkspaces = useCallback(async () => {
     const res = await fetch("/api/workspaces");
@@ -72,7 +92,8 @@ export default function EvidencePage() {
 
   useEffect(() => {
     fetchWorkspaces();
-  }, [fetchWorkspaces]);
+    fetchCapabilities();
+  }, [fetchWorkspaces, fetchCapabilities]);
 
   useEffect(() => {
     if (selectedWs) fetchRuns();
@@ -167,6 +188,41 @@ export default function EvidencePage() {
           </div>
         );
       })()}
+
+      {Object.keys(capabilities).length > 0 && (
+        <div className="grid gap-2 sm:grid-cols-3">
+          {Object.entries(capabilities).map(([key, cap]) => (
+            <div
+              key={key}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${
+                cap.available
+                  ? "border-green-200 bg-green-50 text-green-800"
+                  : "border-border bg-muted/30 text-muted-foreground"
+              }`}
+            >
+              <span
+                className={`inline-block h-2 w-2 rounded-full ${
+                  cap.available ? "bg-green-500" : "bg-gray-300"
+                }`}
+              />
+              <span className="font-medium">{cap.name}</span>
+              {!cap.available && cap.tool && (
+                <a
+                  href={cap.installUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto underline"
+                >
+                  Install {cap.tool}
+                </a>
+              )}
+              {cap.available && (
+                <span className="ml-auto">Active</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">

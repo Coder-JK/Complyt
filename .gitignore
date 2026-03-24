@@ -49,3 +49,6 @@ pnpm-debug.log*
 
 # Salesforce (legacy, not part of this project)
 .sfdx/
+
+# Internal product docs (not for public repo)
+product docs/
