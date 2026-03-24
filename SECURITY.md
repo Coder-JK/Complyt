@@ -6,7 +6,7 @@ If you discover a security vulnerability in Complyt, please report it responsibl
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Instead, email security@eternix.dev with:
+Instead, email jeetakansagara123@gmail.com with:
 
 1. Description of the vulnerability
 2. Steps to reproduce
