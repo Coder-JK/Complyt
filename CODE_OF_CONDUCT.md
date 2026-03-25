@@ -28,7 +28,7 @@ Examples of unacceptable behavior:
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the project maintainers at conduct@eternix.dev.
+reported to the project maintainers at jeetakansagara123@gmail.com.
 
 ## Attribution
 
