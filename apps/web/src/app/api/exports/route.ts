@@ -27,7 +27,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+  }
   const parsed = createExportSchema.safeParse(body);
 
   if (!parsed.success) {

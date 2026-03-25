@@ -1,5 +1,7 @@
-const DEFAULT_TIMEOUT_MS = parseInt(process.env.HTTP_TIMEOUT_MS ?? "10000", 10);
-const DEFAULT_MAX_RETRIES = parseInt(process.env.HTTP_MAX_RETRIES ?? "3", 10);
+const rawTimeout = parseInt(process.env.HTTP_TIMEOUT_MS ?? "10000", 10);
+const DEFAULT_TIMEOUT_MS = Number.isNaN(rawTimeout) ? 10000 : rawTimeout;
+const rawRetries = parseInt(process.env.HTTP_MAX_RETRIES ?? "3", 10);
+const DEFAULT_MAX_RETRIES = Number.isNaN(rawRetries) ? 3 : rawRetries;
 
 interface FetchOptions {
   timeoutMs?: number;

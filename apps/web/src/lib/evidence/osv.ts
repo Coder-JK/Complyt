@@ -61,7 +61,7 @@ export async function scanWithOsv(
           package: {
             name: comp.name,
             version: comp.version,
-            ecosystem: "npm",
+            ecosystem: ecosystemFromPurl(comp.purl),
             purl: comp.purl,
           },
           vulnerabilities: result.value.vulns,
@@ -87,6 +87,16 @@ export async function scanWithOsv(
   };
 }
 
+function ecosystemFromPurl(purl: string): string {
+  const match = purl.match(/^pkg:([^/]+)\//);
+  if (!match) return "npm";
+  const ecosystemMap: Record<string, string> = {
+    npm: "npm", pypi: "PyPI", golang: "Go", maven: "Maven",
+    nuget: "NuGet", gem: "RubyGems", cargo: "crates.io",
+  };
+  return ecosystemMap[match[1]] ?? match[1];
+}
+
 async function queryOsv(component: SbomComponent): Promise<OsvQueryResult> {
   try {
     const response = await resilientFetch(OSV_API, {
@@ -95,7 +105,7 @@ async function queryOsv(component: SbomComponent): Promise<OsvQueryResult> {
       body: JSON.stringify({
         package: {
           name: component.name,
-          ecosystem: "npm",
+          ecosystem: ecosystemFromPurl(component.purl),
         },
         version: component.version,
       }),

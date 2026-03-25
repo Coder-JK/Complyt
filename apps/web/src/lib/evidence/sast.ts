@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { execSync, execFileSync } from "child_process";
 
 export interface SastFinding {
   check_id: string;
@@ -73,15 +73,12 @@ export function runSemgrepScan(targetDir: string): SastScanResult {
   }
 
   try {
-    const output = execSync(
-      `semgrep scan --config auto --json --quiet "${safeDir}"`,
-      {
-        timeout: 120000,
-        maxBuffer: 50 * 1024 * 1024,
-        encoding: "utf-8",
-        cwd: safeDir,
-      }
-    );
+    const output = execFileSync("semgrep", ["scan", "--config", "auto", "--json", "--quiet", safeDir], {
+      timeout: 120000,
+      maxBuffer: 50 * 1024 * 1024,
+      encoding: "utf-8",
+      cwd: safeDir,
+    });
 
     const parsed = JSON.parse(output);
     const results: SastFinding[] = (parsed.results || []).map(

@@ -52,8 +52,10 @@ interface ScannerCapability {
   description: string;
   available: boolean;
   builtin?: boolean;
+  enhanced?: boolean;
   tool?: string;
   installUrl?: string;
+  requiresConfig?: string;
 }
 
 export default function EvidencePage() {
@@ -190,35 +192,57 @@ export default function EvidencePage() {
       })()}
 
       {Object.keys(capabilities).length > 0 && (
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {Object.entries(capabilities).map(([key, cap]) => (
             <div
               key={key}
-              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${
+              className={`flex flex-col gap-1 rounded-lg border px-3 py-2 text-xs ${
                 cap.available
                   ? "border-green-200 bg-green-50 text-green-800"
                   : "border-border bg-muted/30 text-muted-foreground"
               }`}
             >
-              <span
-                className={`inline-block h-2 w-2 rounded-full ${
-                  cap.available ? "bg-green-500" : "bg-gray-300"
-                }`}
-              />
-              <span className="font-medium">{cap.name}</span>
-              {!cap.available && cap.tool && (
-                <a
-                  href={cap.installUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto underline"
-                >
-                  Install {cap.tool}
-                </a>
-              )}
-              {cap.available && (
-                <span className="ml-auto">Active</span>
-              )}
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+                    cap.available ? "bg-green-500" : "bg-gray-300"
+                  }`}
+                />
+                <span className="font-medium">{cap.name}</span>
+              </div>
+              <span className="text-[10px] opacity-75 pl-4">
+                {cap.description}
+              </span>
+              <div className="flex items-center gap-1.5 pl-4 mt-0.5">
+                {!cap.available && cap.tool && (
+                  <a
+                    href={cap.installUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    Install {cap.tool}
+                  </a>
+                )}
+                {cap.available && cap.builtin && (
+                  <Badge variant="outline" className="text-[10px] h-4 px-1">
+                    built-in
+                  </Badge>
+                )}
+                {cap.enhanced && (
+                  <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                    enhanced
+                  </Badge>
+                )}
+                {cap.requiresConfig && (
+                  <Badge variant="outline" className="text-[10px] h-4 px-1 border-amber-300 text-amber-700">
+                    needs config
+                  </Badge>
+                )}
+                {cap.available && !cap.requiresConfig && (
+                  <span className="ml-auto text-[10px]">Active</span>
+                )}
+              </div>
             </div>
           ))}
         </div>

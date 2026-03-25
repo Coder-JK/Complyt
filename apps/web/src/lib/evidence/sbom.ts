@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { execFileSync } from "child_process";
 
 interface CycloneDxComponent {
   type: "library";
@@ -37,15 +38,14 @@ async function generateWithSyft(
   syftPath: string,
   targetDir: string
 ): Promise<CycloneDxBom> {
-  const { execSync } = await import("child_process");
-
   const safeDir = path.resolve(targetDir);
   if (!fs.existsSync(safeDir)) {
     throw new Error(`Target directory does not exist: ${safeDir}`);
   }
 
-  const output = execSync(
-    `"${syftPath}" dir:"${safeDir}" -o cyclonedx-json`,
+  const output = execFileSync(
+    syftPath,
+    ["dir:" + safeDir, "-o", "cyclonedx-json"],
     {
       timeout: 60000,
       maxBuffer: 50 * 1024 * 1024,
@@ -120,9 +120,9 @@ function findLockfile(dir: string): string | null {
 
 function extractVersionsFromLock(lockPath: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const ext = path.basename(lockPath);
+  const filename = path.basename(lockPath);
 
-  if (ext === "package-lock.json") {
+  if (filename === "package-lock.json") {
     try {
       const lock = JSON.parse(fs.readFileSync(lockPath, "utf-8"));
       const packages = lock.packages ?? {};
@@ -130,6 +130,46 @@ function extractVersionsFromLock(lockPath: string): Map<string, string> {
         if (key.startsWith("node_modules/")) {
           const name = key.replace("node_modules/", "");
           versions.set(name, (value as { version?: string }).version ?? "");
+        }
+      }
+    } catch {
+      // Malformed lock file
+    }
+  } else if (filename === "pnpm-lock.yaml") {
+    try {
+      const content = fs.readFileSync(lockPath, "utf-8");
+      const lines = content.split("\n");
+      for (const line of lines) {
+        const match = line.match(
+          /^\s+\/?(@?[^@\s]+(?:\/[^@\s]+)?)@(\d+\.\d+\.\d+[^:\s]*?):/
+        );
+        if (match) {
+          versions.set(match[1], match[2]);
+        }
+      }
+    } catch {
+      // Malformed lock file
+    }
+  } else if (filename === "yarn.lock") {
+    try {
+      const content = fs.readFileSync(lockPath, "utf-8");
+      const lines = content.split("\n");
+      let currentPackage: string | null = null;
+      for (const line of lines) {
+        const headerMatch = line.match(/^"?(@?[^@\s"]+)@[^:]+:?\s*$/);
+        if (headerMatch) {
+          currentPackage = headerMatch[1];
+          continue;
+        }
+        if (currentPackage) {
+          const versionMatch = line.match(/^\s+version\s+"([^"]+)"/);
+          if (versionMatch) {
+            versions.set(currentPackage, versionMatch[1]);
+            currentPackage = null;
+          }
+        }
+        if (line.trim() === "") {
+          currentPackage = null;
         }
       }
     } catch {

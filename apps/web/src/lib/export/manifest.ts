@@ -28,6 +28,20 @@ const ARTIFACT_DESCRIPTIONS: Record<string, string> = {
     "OSV vulnerability scan results from querying osv.dev API for known vulnerabilities in SBOM components.",
   "osv_enriched.json":
     "Vulnerability scan results enriched with CISA KEV (Known Exploited Vulnerabilities) and EPSS (Exploitation Prediction Scoring System) data.",
+  "sast.json":
+    "Static Application Security Testing results identifying code-level security vulnerabilities in JavaScript and TypeScript source files.",
+  "secrets.json":
+    "Hardcoded secret and credential detection results from scanning source code for API keys, tokens, passwords, and other sensitive values.",
+  "license-audit.json":
+    "License compliance audit classifying all dependency licenses by risk level (permissive, copyleft, unknown).",
+  "dockerfile-lint.json":
+    "Dockerfile security lint results checking for container configuration issues such as running as root, unpinned versions, and exposed secrets.",
+  "container-scan.json":
+    "Container image vulnerability scan results identifying known CVEs in base image OS packages.",
+  "cspm-aws.json":
+    "AWS Cloud Security Posture Management audit results checking for infrastructure misconfigurations across S3, IAM, EC2, RDS, and other services.",
+  "dast.json":
+    "Dynamic Application Security Testing results from HTTP security audit checking headers, TLS, cookies, CORS, and sensitive path exposure.",
   "control-matrix.csv":
     "Compliance control status matrix showing all tracked controls and their current assessment status.",
   "evidence-manifest.json":

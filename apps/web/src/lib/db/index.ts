@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS workspaces (
   name TEXT NOT NULL,
   description TEXT,
   target_dir TEXT,
+  dast_target_url TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -71,6 +72,16 @@ CREATE TABLE IF NOT EXISTS exports (
   storage_path TEXT NOT NULL,
   size_bytes INTEGER,
   artifact_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS cloud_credentials (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  credentials TEXT NOT NULL,
+  region TEXT,
+  validated_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 `;

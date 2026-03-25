@@ -6,6 +6,7 @@ export const workspaces = sqliteTable("workspaces", {
   name: text("name").notNull(),
   description: text("description"),
   targetDir: text("target_dir"),
+  dastTargetUrl: text("dast_target_url"),
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
@@ -73,6 +74,13 @@ export const evidenceArtifacts = sqliteTable("evidence_artifacts", {
       "epss_data",
       "control_matrix",
       "evidence_manifest",
+      "sast",
+      "secrets",
+      "license_audit",
+      "dockerfile_lint",
+      "container_scan",
+      "cspm",
+      "dast",
     ],
   }).notNull(),
   filename: text("filename").notNull(),
@@ -113,3 +121,20 @@ export type EvidenceArtifact = typeof evidenceArtifacts.$inferSelect;
 export type NewEvidenceArtifact = typeof evidenceArtifacts.$inferInsert;
 export type Export = typeof exports.$inferSelect;
 export type NewExport = typeof exports.$inferInsert;
+
+export const cloudCredentials = sqliteTable("cloud_credentials", {
+  id: text("id").primaryKey(),
+  workspaceId: text("workspace_id")
+    .notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  credentials: text("credentials").notNull(),
+  region: text("region"),
+  validatedAt: text("validated_at"),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type CloudCredential = typeof cloudCredentials.$inferSelect;
+export type NewCloudCredential = typeof cloudCredentials.$inferInsert;

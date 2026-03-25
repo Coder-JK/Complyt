@@ -6,12 +6,15 @@ This directory contains the full documentation for Complyt.
 
 | Document | Description |
 |---|---|
-| [User Guide](user-guide.md) | What Complyt does, who it's for, walkthrough with screenshots |
-| [Getting Started](getting-started.md) | Setup, commands, and troubleshooting |
-| [Architecture](architecture.md) | System design, data flows, and tech choices |
-| [Security](security.md) | Threat model, data handling, supply-chain hardening |
-| [Vulnerability Evidence Pack](evidence-packs/vuln-pack.md) | SBOM + OSV + KEV + EPSS pipeline |
-| [Contributing](contributing.md) | Development setup and PR guidelines |
+| [User Guide](user-guide.md) | What Complyt does, who it's for, walkthrough |
+| [Getting Started](getting-started.md) | Setup, commands, configuration, and troubleshooting |
+| [Architecture](architecture.md) | System design, scanner registry, data flows, and tech choices |
+| [Security](security.md) | Threat model, data handling, credential storage, supply-chain hardening |
+| [Evidence Pack Reference](evidence-packs/vuln-pack.md) | All 8 scanning layers and 13 artifact types |
+| [Scanner Reference](scanner-reference.md) | Complete reference for all 8 scanner layers with rule IDs |
+| [CSPM Setup](cspm-setup.md) | AWS cloud security configuration and IAM policy |
+| [DAST Setup](dast-setup.md) | HTTP security testing configuration and safety notes |
+| [Contributing](contributing.md) | Development setup, PR guidelines, and how to add scanners |
 | [Releasing](releasing.md) | Release process and SBOM generation |
 | [OpenAPI Specification](openapi.yaml) | Machine-readable API documentation |
 

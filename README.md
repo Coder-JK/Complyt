@@ -1,13 +1,21 @@
 # Complyt
 
-Open-source compliance automation toolkit. Generate audit-ready evidence packs and maintain continuous control monitoring using your existing stack.
+Open-source compliance automation toolkit. Generate audit-ready evidence packs with 8 built-in vulnerability scanning layers and maintain continuous control monitoring — no external tools required.
 
 ## What it does
 
-- **Tracks controls as data** in a local SQLite database with a web UI
-- **Runs repeatable evidence collectors** that produce SBOM, vulnerability scans, and enriched reports
-- **Exports auditor-ready evidence packs** as ZIP archives with full provenance (hashes, timestamps, manifests)
-- **Enriches vulnerability data** with CISA KEV (known exploited) and EPSS (exploitation probability) scores
+- **Tracks controls as data** with 25 starter controls across 8 categories in a local SQLite database with a web UI
+- **Runs 8 vulnerability scanning layers** — all built-in after `pnpm install`:
+  - **SCA** (dependency vulnerabilities via OSV.dev + CISA KEV + EPSS)
+  - **SAST** (14 code bug patterns)
+  - **Secret detection** (30 credential patterns with entropy analysis)
+  - **License compliance** (36+ SPDX identifiers classified by risk)
+  - **Dockerfile security** (18 lint rules)
+  - **Container image scanning** (EOL detection + OS package vulnerabilities)
+  - **Cloud security** (25 AWS CSPM checks across S3, IAM, CloudTrail, EC2, RDS, KMS)
+  - **HTTP security audit** (15 DAST checks — headers, TLS, cookies, CORS, sensitive paths)
+- **Optional enhanced scanners** (Semgrep, Gitleaks, Trivy, Nuclei) for deeper analysis via `pnpm setup:tools`
+- **Exports auditor-ready evidence packs** as ZIP archives with SHA-256 integrity hashes
 
 ## Quickstart
 
@@ -31,16 +39,39 @@ Open [http://localhost:3000](http://localhost:3000). Create a workspace, run an 
 | `pnpm test:e2e` | Run end-to-end tests (Playwright) |
 | `pnpm db:push` | Push database schema changes |
 | `pnpm db:studio` | Open Drizzle Studio (DB browser) |
+| `pnpm setup:tools` | Install optional enhanced scanners |
 
-## Evidence Pack contents
+## Scan Coverage
 
-An exported audit pack ZIP contains:
+All 8 layers work out of the box after `pnpm install`. No external tools required.
+
+| Layer | Built-in | Rules | Enhanced Tool | Output File |
+|---|---|---|---|---|
+| SCA (dependencies) | Yes | OSV.dev + KEV + EPSS | Syft | `sbom.json`, `osv.json`, `osv_enriched.json` |
+| SAST (code bugs) | Yes | 14 patterns | Semgrep | `sast.json` |
+| Secret detection | Yes | 30 patterns | Gitleaks | `secrets.json` |
+| License compliance | Yes | 36+ SPDX IDs | — | `license-audit.json` |
+| Dockerfile security | Yes | 18 rules | Hadolint | `dockerfile-lint.json` |
+| Container images | Yes | EOL + OSV | Trivy | `container-scan.json` |
+| Cloud security (AWS) | Yes | 25 checks | — | `cspm-aws.json` |
+| HTTP security (DAST) | Yes | 15 checks | Nuclei | `dast.json` |
+
+## Evidence Pack Contents
+
+An exported audit pack ZIP can contain up to 13 files:
 
 | File | Description |
 |---|---|
-| `sbom.json` | CycloneDX Software Bill of Materials |
+| `sbom.json` | CycloneDX 1.5 Software Bill of Materials |
 | `osv.json` | OSV vulnerability scan results |
 | `osv_enriched.json` | Vulnerabilities enriched with CISA KEV + EPSS data |
+| `sast.json` | Static analysis findings (code bugs) |
+| `secrets.json` | Detected credential/secret leaks (redacted) |
+| `license-audit.json` | License compliance audit with risk classifications |
+| `dockerfile-lint.json` | Dockerfile security lint results |
+| `container-scan.json` | Container image vulnerability scan |
+| `cspm-aws.json` | AWS cloud security posture assessment |
+| `dast.json` | HTTP security audit results |
 | `control-matrix.csv` | Control status matrix |
 | `evidence-manifest.json` | Artifact metadata with SHA-256 hashes and timestamps |
 | `README.md` | Human-readable explanation of each artifact |
@@ -56,7 +87,7 @@ An exported audit pack ZIP contains:
 
 See [docs/architecture.md](docs/architecture.md) for details.
 
-## External data sources
+## External Data Sources
 
 All network calls are optional and resilient (timeouts, retries, caching, offline mode).
 
@@ -70,11 +101,14 @@ All network calls are optional and resilient (timeouts, retries, caching, offlin
 
 See the [docs/](docs/) directory:
 
-- **[User Guide](docs/user-guide.md)** -- what Complyt does, who it's for, and a walkthrough with screenshots
+- **[User Guide](docs/user-guide.md)** — what Complyt does, who it's for, and a walkthrough
 - [Getting Started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Security](docs/security.md)
-- [Evidence Packs: Vulnerability](docs/evidence-packs/vuln-pack.md)
+- [Evidence Packs](docs/evidence-packs/vuln-pack.md)
+- [Scanner Reference](docs/scanner-reference.md)
+- [CSPM Setup](docs/cspm-setup.md)
+- [DAST Setup](docs/dast-setup.md)
 - [Contributing](docs/contributing.md)
 - [Releasing](docs/releasing.md)
 

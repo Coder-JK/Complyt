@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { execSync, execFileSync } from "child_process";
 
 export interface SecretFinding {
   description: string;
@@ -81,14 +81,11 @@ export function runGitleaksScan(targetDir: string): SecretScanResult {
     const reportPath = path.join(safeDir, ".gitleaks-report.json");
 
     try {
-      execSync(
-        `gitleaks detect --source "${safeDir}" --report-format json --report-path "${reportPath}" --no-git`,
-        {
-          timeout: 120000,
-          maxBuffer: 50 * 1024 * 1024,
-          encoding: "utf-8",
-        }
-      );
+      execFileSync("gitleaks", ["detect", "--source", safeDir, "--report-format", "json", "--report-path", reportPath, "--no-git"], {
+        timeout: 120000,
+        maxBuffer: 50 * 1024 * 1024,
+        encoding: "utf-8",
+      });
     } catch {
       // gitleaks exits with code 1 when findings are detected -- that's expected
     }

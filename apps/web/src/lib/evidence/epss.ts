@@ -31,10 +31,13 @@ export async function fetchEpssScores(
 
       if (data.data && Array.isArray(data.data)) {
         for (const entry of data.data) {
+          const epssScore = parseFloat(entry.epss);
+          const percentile = parseFloat(entry.percentile);
+          if (Number.isNaN(epssScore) || Number.isNaN(percentile)) continue;
           map.set(entry.cve, {
             cve: entry.cve,
-            epss: parseFloat(entry.epss),
-            percentile: parseFloat(entry.percentile),
+            epss: epssScore,
+            percentile,
             date: entry.date,
           });
         }

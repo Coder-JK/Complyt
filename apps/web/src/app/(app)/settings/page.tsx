@@ -12,7 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, FolderOpen, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Loader2,
+  FolderOpen,
+  AlertTriangle,
+  CheckCircle2,
+  Globe,
+  Cloud,
+} from "lucide-react";
 
 interface Workspace {
   id: string;
@@ -22,6 +30,13 @@ interface Workspace {
   createdAt: string;
 }
 
+const AWS_REGIONS = [
+  { value: "us-east-1", label: "US East (N. Virginia)" },
+  { value: "us-west-2", label: "US West (Oregon)" },
+  { value: "eu-west-1", label: "EU (Ireland)" },
+  { value: "ap-southeast-1", label: "Asia Pacific (Singapore)" },
+] as const;
+
 export default function SettingsPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +44,17 @@ export default function SettingsPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [targetDir, setTargetDir] = useState("");
+
+  const [awsAccessKeyId, setAwsAccessKeyId] = useState("");
+  const [awsSecretKey, setAwsSecretKey] = useState("");
+  const [awsRegion, setAwsRegion] = useState("us-east-1");
+  const [awsStatus, setAwsStatus] = useState<string | null>(null);
+  const [awsSaving, setAwsSaving] = useState(false);
+
+  const [dastUrl, setDastUrl] = useState("");
+  const [dastTesting, setDastTesting] = useState(false);
+  const [dastTestResult, setDastTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [dastSaving, setDastSaving] = useState(false);
 
   const fetchWorkspaces = useCallback(async () => {
     const res = await fetch("/api/workspaces");
@@ -71,6 +97,61 @@ export default function SettingsPage() {
       body: JSON.stringify({ targetDir: newDir.trim() }),
     });
     await fetchWorkspaces();
+  }
+
+  const activeWsId = workspaces[0]?.id;
+
+  async function handleSaveAwsCredentials(e: React.FormEvent) {
+    e.preventDefault();
+    if (!activeWsId || !awsAccessKeyId.trim() || !awsSecretKey.trim()) return;
+    setAwsSaving(true);
+    setAwsStatus(null);
+    try {
+      const res = await fetch(`/api/workspaces/${activeWsId}/credentials`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          awsAccessKeyId: awsAccessKeyId.trim(),
+          awsSecretAccessKey: awsSecretKey.trim(),
+          awsRegion,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAwsStatus(data.accountId ? `Connected as account ${data.accountId}` : "Credentials saved");
+      } else {
+        const err = await res.json().catch(() => ({ error: "Unknown error" }));
+        setAwsStatus(`Error: ${err.error ?? res.statusText}`);
+      }
+    } catch {
+      setAwsStatus("Error: Failed to connect");
+    }
+    setAwsSaving(false);
+  }
+
+  async function handleTestDast() {
+    if (!dastUrl.trim()) return;
+    setDastTesting(true);
+    setDastTestResult(null);
+    try {
+      const res = await fetch(dastUrl.trim(), { method: "HEAD", mode: "no-cors" });
+      setDastTestResult({ ok: true, message: `Reachable (${res.status || "ok"})` });
+    } catch {
+      setDastTestResult({ ok: false, message: "Unreachable — check the URL and try again" });
+    }
+    setDastTesting(false);
+  }
+
+  async function handleSaveDast() {
+    if (!activeWsId || !dastUrl.trim()) return;
+    setDastSaving(true);
+    await fetch(`/api/workspaces/${activeWsId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dastTargetUrl: dastUrl.trim() }),
+    });
+    await fetchWorkspaces();
+    setDastSaving(false);
   }
 
   return (
@@ -172,6 +253,158 @@ export default function SettingsPage() {
                   onUpdateTargetDir={handleUpdateTargetDir}
                 />
               ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Cloud className="h-4 w-4" />
+            Cloud Security (CSPM)
+          </CardTitle>
+          <CardDescription>
+            Add AWS credentials to scan your cloud infrastructure for
+            misconfigurations. Credentials are stored locally and never leave
+            your machine.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!activeWsId ? (
+            <p className="text-sm text-muted-foreground">
+              Create a workspace above first.
+            </p>
+          ) : (
+            <form onSubmit={handleSaveAwsCredentials} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="aws-key-id">AWS Access Key ID</Label>
+                  <Input
+                    id="aws-key-id"
+                    placeholder="AKIA..."
+                    value={awsAccessKeyId}
+                    onChange={(e) => setAwsAccessKeyId(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="aws-secret">Secret Access Key</Label>
+                  <Input
+                    id="aws-secret"
+                    type="password"
+                    placeholder="wJalrX..."
+                    value={awsSecretKey}
+                    onChange={(e) => setAwsSecretKey(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="aws-region">Region</Label>
+                <select
+                  id="aws-region"
+                  value={awsRegion}
+                  onChange={(e) => setAwsRegion(e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {AWS_REGIONS.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="submit"
+                  disabled={awsSaving || !awsAccessKeyId.trim() || !awsSecretKey.trim()}
+                >
+                  {awsSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Test &amp; Save
+                </Button>
+                {awsStatus && (
+                  <span
+                    className={`text-sm ${
+                      awsStatus.startsWith("Error") ? "text-destructive" : "text-green-600"
+                    }`}
+                  >
+                    {awsStatus.startsWith("Error") ? (
+                      <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />
+                    ) : (
+                      <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />
+                    )}
+                    {awsStatus}
+                  </span>
+                )}
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Security Testing (DAST)
+          </CardTitle>
+          <CardDescription>
+            Provide your application URL to run HTTP security audits. Checks are
+            passive and safe for production.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!activeWsId ? (
+            <p className="text-sm text-muted-foreground">
+              Create a workspace above first.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="dast-url">Application URL</Label>
+                <Input
+                  id="dast-url"
+                  type="url"
+                  placeholder="https://your-app.example.com"
+                  value={dastUrl}
+                  onChange={(e) => {
+                    setDastUrl(e.target.value);
+                    setDastTestResult(null);
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleTestDast}
+                  disabled={dastTesting || !dastUrl.trim()}
+                >
+                  {dastTesting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Test Connection
+                </Button>
+                <Button
+                  onClick={handleSaveDast}
+                  disabled={dastSaving || !dastUrl.trim()}
+                >
+                  {dastSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save
+                </Button>
+                {dastTestResult && (
+                  <span
+                    className={`text-sm ${
+                      dastTestResult.ok ? "text-green-600" : "text-destructive"
+                    }`}
+                  >
+                    {dastTestResult.ok ? (
+                      <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />
+                    ) : (
+                      <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />
+                    )}
+                    {dastTestResult.message}
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </CardContent>

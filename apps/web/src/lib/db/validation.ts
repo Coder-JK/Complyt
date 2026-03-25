@@ -33,6 +33,13 @@ export const artifactTypeEnum = z.enum([
   "epss_data",
   "control_matrix",
   "evidence_manifest",
+  "sast",
+  "secrets",
+  "license_audit",
+  "dockerfile_lint",
+  "container_scan",
+  "cspm",
+  "dast",
 ]);
 export type ArtifactType = z.infer<typeof artifactTypeEnum>;
 
@@ -40,12 +47,14 @@ export const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().max(1000).optional(),
   targetDir: z.string().max(500).optional(),
+  dastTargetUrl: z.string().optional(),
 });
 
 export const updateWorkspaceSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().max(1000).optional(),
   targetDir: z.string().max(500).optional(),
+  dastTargetUrl: z.string().optional(),
 });
 
 export const createControlSchema = z.object({

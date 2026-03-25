@@ -31,13 +31,24 @@ export async function GET(
     );
   }
 
-  const fileBuffer = fs.readFileSync(fullPath);
+  const stat = fs.statSync(fullPath);
+  const stream = fs.createReadStream(fullPath);
+  const readable = new ReadableStream({
+    start(controller) {
+      stream.on("data", (chunk: Buffer | string) => {
+        const buf = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+        controller.enqueue(new Uint8Array(buf));
+      });
+      stream.on("end", () => controller.close());
+      stream.on("error", (err) => controller.error(err));
+    },
+  });
 
-  return new NextResponse(fileBuffer, {
+  return new NextResponse(readable, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${exp.filename}"`,
-      "Content-Length": String(fileBuffer.length),
+      "Content-Length": String(stat.size),
     },
   });
 }
